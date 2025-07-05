@@ -16,26 +16,26 @@
             background-color: #121212;
             color: #FFD700;
             line-height: 1.6;
-            overflow-x: hidden;
+            padding-bottom: 40px;
         }
         
+        /* Дисклеймер (фиксирован внизу) */
         .warning-banner {
-            background-color: #ff0000;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            font-weight: bold;
             position: fixed;
-            top: 0;
+            bottom: 0;
             left: 0;
             right: 0;
-            z-index: 1000;
+            background-color: #e60000;
+            color: white;
+            text-align: center;
+            padding: 8px;
+            font-size: 14px;
+            z-index: 999;
         }
-        
+
         .container {
             padding: 10px;
             max-width: 100%;
-            margin-top: 40px;
         }
         
         header {
@@ -90,6 +90,24 @@
             margin-top: 15px;
         }
         
+        @media (min-width: 500px) {
+            .games-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .games-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+        
         .game-card {
             background: rgba(26, 26, 26, 0.8);
             border: 2px solid #FFD700;
@@ -97,16 +115,12 @@
             padding: 15px;
             text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
         
         .game-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
-        }
-        
-        .game-card:active {
-            transform: scale(0.98);
         }
         
         .game-title {
@@ -552,30 +566,63 @@
             opacity: 0;
         }
         
-        @media (min-width: 500px) {
-            .games-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+        /* Окно пополнения */
+        #popoln {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
         }
         
-        @media (min-width: 768px) {
-            .games-grid {
-                grid-template-columns: repeat(4, 1fr);
-            }
-            
-            header {
-                flex-direction: row;
-                justify-content: space-between;
-                align-items: center;
-            }
+        .popup-content {
+            background: #1a1a1a;
+            border: 2px solid #FFD700;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .popup-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #333;
+            color: #FFD700;
+            border: 1px solid #FFD700;
+            border-radius: 5px;
+        }
+        
+        .cancel-btn {
+            background: #333 !important;
+            color: #FFD700 !important;
+            border: 1px solid #FFD700 !important;
+            margin-top: 10px;
+        }
+        
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .close-popup:hover {
+            transform: rotate(90deg);
         }
     </style>
 </head>
 <body>
-    <div class="warning-banner">
-        ВНИМАНИЕ: Это не настоящее казино, игра ведется на виртуальные G-коины без реальной денежной стоимости!
-    </div>
-    
     <div class="container">
         <header>
             <div class="logo">G COIN GAMES</div>
@@ -612,7 +659,12 @@
             </div>
         </div>
     </div>
-    
+
+    <!-- Дисклеймер (теперь внизу экрана) -->
+    <div class="warning-banner">
+        ВНИМАНИЕ: Это игровой симулятор, G-коины не имеют денежной стоимости
+    </div>
+
     <!-- Модальные окна для игр -->
     <div id="slots-modal" class="modal">
         <div class="modal-content">
@@ -658,7 +710,6 @@
                 <div class="roulette-container">
                     <div class="roulette-wheel" id="roulette-wheel">
                         <div class="roulette-ball" id="roulette-ball"></div>
-                        <!-- Числа рулетки будут добавлены через JS -->
                     </div>
                     <div class="roulette-result" id="roulette-result"></div>
                 </div>
@@ -768,13 +819,15 @@
         </div>
     </div>
     
-    <div id="popoln" style="display: none; top:0px; left:0px; width: 100%; height: 100%; position: fixed; background-color: rgba(0,0,0,0.9); z-index: 1000;">
-        <div style="background-color: #1a1a1a; border: 2px solid #FFD700; border-radius: 10px; padding: 20px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 400px;">
-            <h3 style="text-align: center; margin-bottom: 15px;">Пополнение баланса</h3>
-            <input style="width: 100%; padding: 10px; margin-bottom: 10px; background-color: #333; color: #FFD700; border: 1px solid #FFD700; border-radius: 5px;" type="text" placeholder="Код пополнения" id="popcode" />
-            <input style="width: 100%; padding: 10px; margin-bottom: 15px; background-color: #333; color: #FFD700; border: 1px solid #FFD700; border-radius: 5px;" type="text" placeholder="Промокод (необязательно)" id="promocode" />
-            <button onclick="popoln()" class="action-btn" style="width: 100%;">Пополнить</button>
-            <button onclick="document.getElementById('popoln').style.display = 'none'" class="action-btn" style="width: 100%; margin-top: 10px; background: #333; color: #FFD700;">Отмена</button>
+    <!-- Окно пополнения с кнопкой выхода -->
+    <div id="popoln">
+        <div class="popup-content">
+            <span class="close-popup" onclick="closeModal('popoln')">&times;</span>
+            <h3 style="text-align:center; margin-bottom:15px; color:#FFD700;">Пополнение баланса</h3>
+            <input type="text" placeholder="Код пополнения" id="popcode" class="popup-input">
+            <input type="text" placeholder="Промокод (необязательно)" id="promocode" class="popup-input">
+            <button onclick="popoln()" class="action-btn" style="width:100%;">Пополнить</button>
+            <button onclick="closeModal('popoln')" class="action-btn cancel-btn" style="width:100%;">Отмена</button>
         </div>
     </div>
     
@@ -843,12 +896,10 @@
         function openGame(game) {
             document.getElementById(game + '-modal').style.display = 'block';
             
-            // Сброс русской рулетки при открытии
             if (game === 'russian-roulette') {
                 resetRussianRoulette();
             }
             
-            // Сброс состояния рулетки
             if (game === 'roulette') {
                 rouletteState.currentBetType = null;
                 rouletteState.currentBetAmount = 0;
@@ -876,9 +927,7 @@
         }
         
         document.getElementById('add-funds').addEventListener('click', function() {
-            let popoln = document.getElementById("popoln");
-            popoln.style.display = 'block';
-            updateBalance();
+            document.getElementById('popoln').style.display = 'block';
         });
         
         // Слоты
@@ -901,13 +950,11 @@
             updateBalance();
             document.getElementById('slots-result').innerHTML = '';
             
-            // Добавляем анимацию вращения
             const reels = document.querySelectorAll('.reel');
             reels.forEach(reel => {
                 reel.classList.add('spinning');
             });
             
-            // Анимация вращения
             let reelsSymbols = ['🍒', '🍋', '🍊', '🍇', '🔔', '⭐', '7️⃣'];
             let spins = 0;
             let spinInterval = setInterval(function() {
@@ -1009,13 +1056,11 @@
             const wheel = document.getElementById('roulette-wheel');
             const ball = document.getElementById('roulette-ball');
             
-            // Анимация вращения
             wheel.classList.add('spinning');
             ball.style.animation = 'none';
-            void ball.offsetWidth; // Trigger reflow
+            void ball.offsetWidth;
             ball.style.animation = 'ballSpin 3s linear';
             
-            // Определяем выигрышное число
             setTimeout(function() {
                 wheel.classList.remove('spinning');
                 
@@ -1023,7 +1068,6 @@
                 let winningNumber = winningNumberObj.number;
                 let color = winningNumberObj.color;
                 
-                // Позиционируем шарик на выигрышном числе
                 const angle = 360 / rouletteState.numbers.length;
                 const winIndex = rouletteState.numbers.findIndex(n => n.number === winningNumber);
                 const winAngle = angle * winIndex;
@@ -1098,7 +1142,6 @@
             playerCards = [];
             dealerCards = [];
             
-            // Раздаем карты с анимацией
             setTimeout(() => {
                 playerCards.push(drawCard());
                 updateBlackjackUI();
@@ -1122,7 +1165,6 @@
                 updateBlackjackUI();
                 document.getElementById('dealer-cards').lastChild.classList.add('dealt');
                 
-                // Показываем кнопки действий
                 document.getElementById('blackjack-actions').innerHTML = `
                     <button class="action-btn" onclick="hit()">Еще</button>
                     <button class="action-btn" onclick="stand()">Хватит</button>
@@ -1146,7 +1188,6 @@
                 score += getCardValue(card);
             }
             
-            // Корректировка для тузов
             while (score > 21 && aces > 0) {
                 score -= 10;
                 aces--;
@@ -1168,18 +1209,15 @@
             dealerCardsDiv.innerHTML = '';
             playerCardsDiv.innerHTML = '';
             
-            // Показываем первую карту дилера скрытой
             dealerCardsDiv.innerHTML += `<div class="card">${gameStarted ? dealerCards[0] : '?'}</div>`;
             for (let i = 1; i < dealerCards.length; i++) {
                 dealerCardsDiv.innerHTML += `<div class="card">${dealerCards[i]}</div>`;
             }
             
-            // Показываем все карты игрока
             for (let card of playerCards) {
                 playerCardsDiv.innerHTML += `<div class="card">${card}</div>`;
             }
             
-            // Обновляем счет
             document.getElementById('player-score').textContent = `Счет: ${calculateScore(playerCards)}`;
             document.getElementById('dealer-score').textContent = gameStarted ? `Счет: ?` : '';
         }
@@ -1202,7 +1240,6 @@
         function stand() {
             if (!gameStarted) return;
             
-            // Дилер берет карты до 17
             let dealerDrawsCard = () => {
                 if (calculateScore(dealerCards) < 17) {
                     setTimeout(() => {
@@ -1276,7 +1313,6 @@
             document.getElementById('rr-reset').style.display = 'none';
             document.getElementById('rr-cashout').style.display = 'none';
             
-            // Обновляем отображение барабана
             let chambers = document.querySelectorAll('.chamber');
             chambers.forEach(chamber => {
                 chamber.className = 'chamber';
@@ -1289,7 +1325,6 @@
                 return;
             }
             
-            // Первый выстрел - списываем ставку
             if (rrShotsFired === 0) {
                 balance -= rrBet;
                 updateBalance();
@@ -1297,14 +1332,11 @@
             
             rrShotsFired++;
             
-            // Помечаем текущую камеру
             let chambers = document.querySelectorAll('.chamber');
             let currentChamber = chambers[rrCurrentChamber];
             currentChamber.classList.add('active');
             
-            // Проверяем, есть ли пуля в текущей камере
             if (rrCurrentChamber === rrBulletPosition) {
-                // Выстрел!
                 setTimeout(() => {
                     currentChamber.classList.remove('active');
                     currentChamber.classList.add('bullet');
@@ -1319,12 +1351,10 @@
                     }
                 }, 500);
             } else {
-                // Холостой выстрел
                 setTimeout(() => {
                     currentChamber.classList.remove('active');
                     currentChamber.classList.add('safe');
                     
-                    // Увеличиваем множитель
                     let multiplier = rrShotsFired;
                     rrWinAmount = rrBet * multiplier;
                     
@@ -1332,13 +1362,11 @@
                         `<span class="win">Холостой выстрел! Текущий множитель: ${multiplier}x</span><br>
                          <span>Вы можете забрать ${rrWinAmount} G или продолжить рисковать!</span>`;
                     
-                    // Предлагаем забрать выигрыш или продолжить
                     document.getElementById('rr-trigger').textContent = 'Продолжить (' + (multiplier + 1) + 'x)';
                     document.getElementById('rr-cashout').textContent = 'Забрать ' + rrWinAmount + ' G';
                     document.getElementById('rr-cashout').style.display = 'block';
                     document.getElementById('rr-cashout').onclick = function() { cashoutRR(rrWinAmount); };
                     
-                    // Переходим к следующей камере
                     rrCurrentChamber = (rrCurrentChamber + 1) % 6;
                 }, 500);
             }
@@ -1356,7 +1384,7 @@
             showWinAnimation(amount);
         }
         
-        // Моментальная лотерея
+        // Лотерея
         function buyLotteryTicket() {
             let price = parseInt(document.getElementById('lottery-price').value);
             
@@ -1368,7 +1396,6 @@
             balance -= price;
             updateBalance();
             
-            // Анимация "скретч-билета"
             let ticket = document.getElementById('lottery-ticket');
             let resultDiv = document.getElementById('lottery-result');
             resultDiv.innerHTML = '';
@@ -1395,32 +1422,27 @@
             let ticket = document.getElementById('lottery-ticket');
             let resultDiv = document.getElementById('lottery-result');
             
-            // Определяем выигрыш (70% проигрыш, 20% маленький выигрыш, 8% средний, 2% крупный)
             let random = Math.random();
             let win = 0;
             let maxWin = 0;
             
-            // Устанавливаем максимальный выигрыш в зависимости от цены билета
             if (price === 50) maxWin = 500;
             else if (price === 100) maxWin = 1000;
             else if (price === 200) maxWin = 2500;
             else if (price === 500) maxWin = 10000;
             
             if (random < 0.7) {
-                // Проигрыш (70%)
                 win = 0;
                 ticket.textContent = 'ПУСТО';
                 ticket.style.background = '#ffcccc';
                 resultDiv.innerHTML = '<span class="lose">К сожалению, вы не выиграли</span>';
             } else if (random < 0.9) {
-                // Маленький выигрыш (20%)
                 win = Math.floor(price * (0.5 + Math.random() * 1.5));
                 ticket.textContent = win + ' G';
                 ticket.style.background = '#ccffcc';
                 resultDiv.innerHTML = `<span class="win">Поздравляем! Вы выиграли ${win} G!</span>`;
                 showWinAnimation(win);
             } else if (random < 0.98) {
-                // Средний выигрыш (8%)
                 win = Math.floor(price * (2 + Math.random() * 3));
                 ticket.textContent = win + ' G';
                 ticket.style.background = '#ccffcc';
@@ -1428,7 +1450,6 @@
                 resultDiv.innerHTML = `<span class="win">Отлично! Вы выиграли ${win} G!</span>`;
                 showWinAnimation(win);
             } else {
-                // Крупный выигрыш (2%)
                 win = Math.floor(price * (5 + Math.random() * (maxWin/price - 5)));
                 ticket.textContent = win + ' G';
                 ticket.style.background = '#ffffcc';
@@ -1437,7 +1458,6 @@
                 showWinAnimation(win, true);
             }
             
-            // Добавляем выигрыш к балансу
             balance += win;
             updateBalance();
         }
@@ -1447,18 +1467,15 @@
             const container = document.getElementById('win-animation-container');
             container.innerHTML = '';
             
-            // Создаем элемент с суммой выигрыша
             const winAmountElement = document.createElement('div');
             winAmountElement.className = 'win-amount';
             winAmountElement.textContent = `+${amount} G`;
             container.appendChild(winAmountElement);
             
-            // Для джекпота добавляем конфетти
             if (isJackpot) {
                 createConfetti();
             }
             
-            // Удаляем анимацию через 2 секунды
             setTimeout(() => {
                 container.innerHTML = '';
             }, 2000);
@@ -1478,13 +1495,11 @@
                 confetti.style.width = `${Math.random() * 10 + 5}px`;
                 confetti.style.height = `${Math.random() * 10 + 5}px`;
                 
-                // Анимация
                 const animationDuration = Math.random() * 3 + 2;
                 confetti.style.animation = `confettiFall ${animationDuration}s linear forwards`;
                 
                 container.appendChild(confetti);
                 
-                // Удаляем конфетти после анимации
                 setTimeout(() => {
                     confetti.remove();
                 }, animationDuration * 1000);
@@ -1539,7 +1554,6 @@
             document.getElementById("popoln").style.display = 'none';
             updateBalance();
             
-            // Показываем анимацию пополнения
             showWinAnimation(mon);
         }
     </script>
