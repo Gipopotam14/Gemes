@@ -1161,9 +1161,9 @@
                 return;
             }
             mon = mon * 1;
-            if(promo === "5914538874" && mon >= 100 && !localStorage.getItem("casino-5914538874")){
+            if(promo === "5914538874" && mon >= 100 && localStorage.getItem("casino-promo-1") !== "used"){
                 mon += 1000;
-                localStorage.setItem("casino-5914538874", 'used');
+                localStorage.setItem("casino-promo-1", 'used');
             }
             testl.push(date);
             localStorage.setItem("casino-dates", JSON.stringify(testl));
