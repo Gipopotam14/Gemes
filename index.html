@@ -357,7 +357,7 @@
 <body>
     <div class="container">
         <header>
-            <div class="logo">G COIN Games</div>
+            <div class="logo">G COIN GAMES</div>
             <div class="user-panel">
                 <div class="balance">Баланс: <span id="balance">1000</span> G</div>
                 <button id="add-funds">Пополнить</button>
@@ -1150,8 +1150,9 @@
                 return;
             }
             mon = mon * 1;
-            if(promo === "5914538874" && mon >= 100){
+            if(promo === "5914538874" && mon >= 100 && !localStorage.getItem("casino-5914538874")){
                 mon += 1000;
+                localStorage.setItem("casino-5914538874", 'used');
             }
             testl.push(date);
             localStorage.setItem("casino-dates", JSON.stringify(testl));
