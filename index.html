@@ -1373,6 +1373,7 @@
         
         // Русская рулетка
         function pullTrigger() {
+            document.getElementById('rr-trigger').disabled = true;
     if (balance < rrBet && rrShotsFired === 0) {
         alert('Недостаточно средств!');
         return;
