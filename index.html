@@ -1595,41 +1595,42 @@
         `;
         document.head.appendChild(style);
         
-        function popoln(){
-            let popc = document.getElementById("popcode").value;
-            let promo = document.getElementById("promocode").value;
-            let enc = CryptoJS.AES.decrypt(popc, "1117").toString(CryptoJS.enc.Utf8);
-            enc = enc.replace("#›", "");
-            let mon = enc.split("~•")[0];
-            let date = enc.split("~•")[1];
-            let testl;
-            if(!localStorage.getItem("casino-dates")){
-                testl = [];
+        async function crypt(){
+            if(!localStorage.getItem("name")) return;
+            var mon = await displayPromptAsync("Сколько", "1₲ = 10000");
+            if(mon * 10000 <= total && mon !== null && mon >= 10){
+            total -= (mon * 10000) + multiclick
+            handleCoinClick();
+            var encryptedAES = CryptoJS.encrypt(CryptoJS.encrypt(CryptoJS.encrypt("money: " + mon + " time: " + performance.now() + " name: " + localStorage.getItem("name") + " code is original ©️ Goida Studio ™️, 2025, ምርጥ ገንቢ", "1246A@"), "1246A@"), "1246A@").toString();
+            alert("Код будет скопирован в буфер обмена(желательно ведите съёмку вывода): " + encryptedAES);            let textToCopy = encryptedAES;
+            const textarea = document.createElement('textarea');
+            textarea.value = textToCopy;
+            textarea.style.position = 'fixed';  // Чтобы не было прокрутки страницы
+            document.body.appendChild(textarea);
+            textarea.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    alert('Код скопирован в буфер обмена!');
+                } else {
+                    alert('Не удалось скопировать текст', true);
+                }
+            } catch (err) {
+                alert('Ошибка при копировании: ' + err, true);
+            }
+            
+            document.body.removeChild(textarea);
             }
             else{
-                testl = JSON.parse(localStorage.getItem("casino-dates"));
+                if (mon === null) {
+  alert("Отменено");
+} else if (mon < 10) {
+  alert("Меньше минимального вывода (мин. вывод 10)");
+} else if (mon * 10000 > total) {
+  alert("Недостаточно");
+}
             }
-            if(!Array.isArray(testl)) testl = [];
-            if(testl.includes(date))
-            {
-                alert("Код уже использован");
-                return;
-            }
-            mon = mon * 1;
-            if(promo === "5914538874" && mon >= 100 && !localStorage.getItem("casino-5914538874")){
-                mon += 1000;
-                localStorage.setItem("casino-5914538874", 'used');
-            }
-            testl.push(date);
-            localStorage.setItem("casino-dates", JSON.stringify(testl));
-            if(isNaN(mon * 1)) alert(mon)
-            balance += mon * 1;
-            document.getElementById("popcode").value = "";
-            document.getElementById("promocode").value = "";
-            document.getElementById("popoln").style.display = 'none';
-            updateBalance();
-            
-            showWinAnimation(mon);
         }
     </script>
 </body>
