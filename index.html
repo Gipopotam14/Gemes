@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>G Coin Games</title>
     <style>
-        html {
+        /* Запрет скроллинга и зума */
+        html, body {
+            overflow: hidden;
+            height: 100%;
+            position: fixed;
+            width: 100%;
             touch-action: manipulation;
         }
         
@@ -20,7 +25,6 @@
             background-color: #121212;
             color: #FFD700;
             line-height: 1.6;
-            padding-bottom: 60px;
         }
         
         .warning-banner {
@@ -39,6 +43,8 @@
         .container {
             padding: 15px;
             max-width: 100%;
+            height: calc(100vh - 60px);
+            overflow-y: auto;
         }
         
         header {
@@ -488,7 +494,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            transition: all 0.2s;
         }
         
         .chamber.active {
@@ -498,7 +504,7 @@
         .chamber.bullet {
             background: red;
             border: 2px solid #ff0000;
-            animation: bulletFlash 0.5s infinite alternate;
+            animation: bulletFlash 0.3s infinite alternate;
         }
         
         @keyframes bulletFlash {
@@ -509,7 +515,7 @@
         .chamber.safe {
             background: green;
             border: 2px solid #00ff00;
-            animation: safeFlash 0.5s infinite alternate;
+            animation: safeFlash 0.3s infinite alternate;
         }
         
         @keyframes safeFlash {
@@ -913,6 +919,7 @@
         let rrCurrentChamber = 0;
         let rrShotsFired = 0;
         let rrWinAmount = 0;
+        let isAnimationPlaying = false;
         
         // Данные для рулетки
         let rouletteState = {
@@ -933,6 +940,11 @@
             balance = savedBalance ? parseInt(savedBalance) : 0;
             updateBalance();
             initRouletteWheel();
+            
+            // Запрет скроллинга на мобильных устройствах
+            document.addEventListener('touchmove', function(e) {
+                e.preventDefault();
+            }, { passive: false });
         });
         
         // Инициализация колеса рулетки
@@ -1372,68 +1384,108 @@
         }
         
         // Русская рулетка
+        function changeRRBet(amount) {
+            let betInput = document.getElementById('rr-bet');
+            let newBet = parseInt(betInput.value) + amount;
+            if (newBet >= 10 && newBet <= 1000) {
+                betInput.value = newBet;
+                rrBet = newBet;
+            }
+        }
+        
+        function resetRussianRoulette() {
+            rrBulletPosition = Math.floor(Math.random() * 6);
+            rrCurrentChamber = 0;
+            rrShotsFired = 0;
+            rrWinAmount = 0;
+            isAnimationPlaying = false;
+            
+            document.getElementById('rr-result').innerHTML = '';
+            document.getElementById('rr-trigger').style.display = 'block';
+            document.getElementById('rr-reset').style.display = 'none';
+            document.getElementById('rr-cashout').style.display = 'none';
+            document.getElementById('rr-trigger').disabled = false;
+            
+            let chambers = document.querySelectorAll('.chamber');
+            chambers.forEach(chamber => {
+                chamber.className = 'chamber';
+            });
+        }
+        
         function pullTrigger() {
+            if (isAnimationPlaying) return;
+            if (balance < rrBet && rrShotsFired === 0) {
+                alert('Недостаточно средств!');
+                return;
+            }
+
+            isAnimationPlaying = true;
             document.getElementById('rr-trigger').disabled = true;
-    if (balance < rrBet && rrShotsFired === 0) {
-        alert('Недостаточно средств!');
-        return;
-    }
-
-    // Блокируем кнопку на время анимации
-    document.getElementById('rr-trigger').disabled = true;
-
-    if (rrShotsFired === 0) {
-        balance -= rrBet;
-        updateBalance();
-    }
-
-    rrShotsFired++;
-    
-    let chambers = document.querySelectorAll('.chamber');
-    let currentChamber = chambers[rrCurrentChamber];
-    currentChamber.classList.add('active');
-    
-    if (rrCurrentChamber === rrBulletPosition) {
-        setTimeout(() => {
-            currentChamber.classList.remove('active');
-            currentChamber.classList.add('bullet');
             
-            document.getElementById('rr-result').innerHTML = 
-                `<span class="lose">БАХ! Вы проиграли ставку ${rrBet} G.</span>`;
-            document.getElementById('rr-trigger').style.display = 'none';
-            document.getElementById('rr-reset').style.display = 'block';
-            
-            if (document.getElementById('rr-cashout')) {
-                document.getElementById('rr-cashout').style.display = 'none';
+            if (rrShotsFired === 0) {
+                balance -= rrBet;
+                updateBalance();
             }
             
-            // Разблокируем кнопку после завершения анимации
-            document.getElementById('rr-trigger').disabled = false;
-        }, 300); // Уменьшено с 500ms до 300ms
-    } else {
-        setTimeout(() => {
-            currentChamber.classList.remove('active');
-            currentChamber.classList.add('safe');
+            rrShotsFired++;
             
-            let multiplier = rrShotsFired;
-            rrWinAmount = rrBet * multiplier;
+            let chambers = document.querySelectorAll('.chamber');
+            let currentChamber = chambers[rrCurrentChamber];
+            currentChamber.classList.add('active');
             
+            if (rrCurrentChamber === rrBulletPosition) {
+                setTimeout(() => {
+                    currentChamber.classList.remove('active');
+                    currentChamber.classList.add('bullet');
+                    
+                    document.getElementById('rr-result').innerHTML = 
+                        `<span class="lose">БАХ! Вы проиграли ставку ${rrBet} G.</span>`;
+                    document.getElementById('rr-trigger').style.display = 'none';
+                    document.getElementById('rr-reset').style.display = 'block';
+                    
+                    if (document.getElementById('rr-cashout')) {
+                        document.getElementById('rr-cashout').style.display = 'none';
+                    }
+                    
+                    isAnimationPlaying = false;
+                }, 300);
+            } else {
+                setTimeout(() => {
+                    currentChamber.classList.remove('active');
+                    currentChamber.classList.add('safe');
+                    
+                    let multiplier = rrShotsFired;
+                    rrWinAmount = rrBet * multiplier;
+                    
+                    document.getElementById('rr-result').innerHTML = 
+                        `<span class="win">Холостой выстрел! Текущий множитель: ${multiplier}x</span><br>
+                         <span>Вы можете забрать ${rrWinAmount} G или продолжить рисковать!</span>`;
+                    
+                    document.getElementById('rr-trigger').textContent = 'Продолжить (' + (multiplier + 1) + 'x)';
+                    document.getElementById('rr-cashout').textContent = 'Забрать ' + rrWinAmount + ' G';
+                    document.getElementById('rr-cashout').style.display = 'block';
+                    document.getElementById('rr-cashout').onclick = function() { cashoutRR(rrWinAmount); };
+                    
+                    rrCurrentChamber = (rrCurrentChamber + 1) % 6;
+                    
+                    isAnimationPlaying = false;
+                    document.getElementById('rr-trigger').disabled = false;
+                }, 300);
+            }
+        }
+        
+        function cashoutRR(amount) {
+            balance += amount;
+            updateBalance();
             document.getElementById('rr-result').innerHTML = 
-                `<span class="win">Холостой выстрел! Текущий множитель: ${multiplier}x</span><br>
-                 <span>Вы можете забрать ${rrWinAmount} G или продолжить рисковать!</span>`;
+                `<span class="win">Вы забрали ${amount} G!</span>`;
+            document.getElementById('rr-trigger').style.display = 'none';
+            document.getElementById('rr-reset').style.display = 'block';
+            document.getElementById('rr-cashout').style.display = 'none';
             
-            document.getElementById('rr-trigger').textContent = 'Продолжить (' + (multiplier + 1) + 'x)';
-            document.getElementById('rr-cashout').textContent = 'Забрать ' + rrWinAmount + ' G';
-            document.getElementById('rr-cashout').style.display = 'block';
-            document.getElementById('rr-cashout').onclick = function() { cashoutRR(rrWinAmount); };
-            
-            rrCurrentChamber = (rrCurrentChamber + 1) % 6;
-            
-            // Разблокируем кнопку после завершения анимации
-            document.getElementById('rr-trigger').disabled = false;
-        }, 300); // Уменьшено с 500ms до 300ms
-    }
-}
+            showWinAnimation(amount);
+        }
+        
         // Лотерея
         function buyLotteryTicket() {
             let price = parseInt(document.getElementById('lottery-price').value);
@@ -1556,52 +1608,41 @@
             }
         }
         
-        // Добавляем стили для анимации конфетти
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes confettiFall {
-                0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
-                100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        async function crypt(){
-            if(!localStorage.getItem("name")) return;
-            var mon = await displayPromptAsync("Сколько", "1₲ = 10000");
-            if(mon * 10000 <= total && mon !== null && mon >= 10){
-            total -= (mon * 10000) + multiclick
-            handleCoinClick();
-            var encryptedAES = CryptoJS.encrypt(CryptoJS.encrypt(CryptoJS.encrypt("money: " + mon + " time: " + performance.now() + " name: " + localStorage.getItem("name") + " code is original ©️ Goida Studio ™️, 2025, ምርጥ ገንቢ", "1246A@"), "1246A@"), "1246A@").toString();
-            alert("Код будет скопирован в буфер обмена(желательно ведите съёмку вывода): " + encryptedAES);            let textToCopy = encryptedAES;
-            const textarea = document.createElement('textarea');
-            textarea.value = textToCopy;
-            textarea.style.position = 'fixed';  // Чтобы не было прокрутки страницы
-            document.body.appendChild(textarea);
-            textarea.select();
-            
-            try {
-                const successful = document.execCommand('copy');
-                if (successful) {
-                    alert('Код скопирован в буфер обмена!');
-                } else {
-                    alert('Не удалось скопировать текст', true);
-                }
-            } catch (err) {
-                alert('Ошибка при копировании: ' + err, true);
-            }
-            
-            document.body.removeChild(textarea);
+        function popoln(){
+            let popc = document.getElementById("popcode").value;
+            let promo = document.getElementById("promocode").value;
+            let enc = CryptoJS.AES.decrypt(popc, "1117").toString(CryptoJS.enc.Utf8);
+            enc = enc.replace("#›", "");
+            let mon = enc.split("~•")[0];
+            let date = enc.split("~•")[1];
+            let testl;
+            if(!localStorage.getItem("casino-dates")){
+                testl = [];
             }
             else{
-                if (mon === null) {
-  alert("Отменено");
-} else if (mon < 10) {
-  alert("Меньше минимального вывода (мин. вывод 10)");
-} else if (mon * 10000 > total) {
-  alert("Недостаточно");
-}
+                testl = JSON.parse(localStorage.getItem("casino-dates"));
             }
+            if(!Array.isArray(testl)) testl = [];
+            if(testl.includes(date))
+            {
+                alert("Код уже использован");
+                return;
+            }
+            mon = mon * 1;
+            if(promo === "5914538874" && mon >= 100 && !localStorage.getItem("casino-5914538874")){
+                mon += 1000;
+                localStorage.setItem("casino-5914538874", 'used');
+            }
+            testl.push(date);
+            localStorage.setItem("casino-dates", JSON.stringify(testl));
+            if(isNaN(mon * 1)) alert(mon)
+            balance += mon * 1;
+            document.getElementById("popcode").value = "";
+            document.getElementById("promocode").value = "";
+            document.getElementById("popoln").style.display = 'none';
+            updateBalance();
+            
+            showWinAnimation(mon);
         }
     </script>
 </body>
