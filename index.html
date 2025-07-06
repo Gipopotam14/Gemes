@@ -1384,10 +1384,51 @@
         }
         
         // Русская рулетка
+// Глобальные переменные
+let rrBulletPosition = Math.floor(Math.random() * 6);
+let rrCurrentChamber = 0;
+let rrShotsFired = 0;
+let rrWinAmount = 0;
+let isAnimationPlaying = false;
+
+// Функция для сброса игры
+function resetRussianRoulette() {
+    rrBulletPosition = Math.floor(Math.random() * 6);
+    rrCurrentChamber = 0;
+    rrShotsFired = 0;
+    rrWinAmount = 0;
+    isAnimationPlaying = false;
+    
+    document.getElementById('rr-result').innerHTML = '';
+    document.getElementById('rr-trigger').style.display = 'block';
+    document.getElementById('rr-trigger').disabled = false;
+    document.getElementById('rr-reset').style.display = 'none';
+    document.getElementById('rr-cashout').style.display = 'none';
+    
+    // Сбрасываем визуальное состояние камер
+    document.querySelectorAll('.chamber').forEach(chamber => {
+        chamber.classList.remove('active', 'bullet', 'safe');
+    });
+}
+
+// Функция для вывода выигрыша
+function cashoutRR(amount) {
+    balance += amount;
+    updateBalance();
+    document.getElementById('rr-result').innerHTML = 
+        `<span class="win">Вы забрали ${amount} G!</span>`;
+    document.getElementById('rr-trigger').style.display = 'none';
+    document.getElementById('rr-reset').style.display = 'block';
+    document.getElementById('rr-cashout').style.display = 'none';
+    
+    showWinAnimation(amount);
+}
+
+// Основная функция игры
 function pullTrigger() {
     if (isAnimationPlaying) return;
-    if (rrCurrentChamber >= maxChambers) {
-        alert('Вы прошли все камеры! Заберите выигрыш.');
+    if (rrCurrentChamber >= 6) {
+        cashoutRR(rrWinAmount);
         return;
     }
     if (balance < rrBet && rrShotsFired === 0) {
@@ -1397,6 +1438,7 @@ function pullTrigger() {
 
     isAnimationPlaying = true;
     document.getElementById('rr-trigger').disabled = true;
+    document.getElementById('rr-cashout').disabled = true;
     
     if (rrShotsFired === 0) {
         balance -= rrBet;
@@ -1404,9 +1446,7 @@ function pullTrigger() {
     }
     
     rrShotsFired++;
-    
-    let chambers = document.querySelectorAll('.chamber');
-    let currentChamber = chambers[rrCurrentChamber];
+    let currentChamber = document.querySelectorAll('.chamber')[rrCurrentChamber];
     currentChamber.classList.add('active');
     
     if (rrCurrentChamber === rrBulletPosition) {
@@ -1427,25 +1467,19 @@ function pullTrigger() {
             currentChamber.classList.remove('active');
             currentChamber.classList.add('safe');
             
-            let multiplier = rrShotsFired;
-            rrWinAmount = rrBet * multiplier;
+            rrWinAmount = rrBet * rrShotsFired;
             
-            // Проверяем, не прошли ли мы все камеры
-            if (rrCurrentChamber >= maxChambers - 1) {
-                document.getElementById('rr-result').innerHTML = 
-                    `<span class="win">Вы прошли все камеры! Ваш выигрыш: ${rrWinAmount} G</span>`;
-                document.getElementById('rr-trigger').style.display = 'none';
-                document.getElementById('rr-reset').style.display = 'block';
-                document.getElementById('rr-cashout').style.display = 'none';
+            if (rrCurrentChamber >= 5) {
                 cashoutRR(rrWinAmount);
             } else {
                 document.getElementById('rr-result').innerHTML = 
-                    `<span class="win">Холостой выстрел! Текущий множитель: ${multiplier}x</span><br>
+                    `<span class="win">Холостой выстрел! Текущий множитель: ${rrShotsFired}x</span><br>
                      <span>Вы можете забрать ${rrWinAmount} G или продолжить рисковать!</span>`;
                 
-                document.getElementById('rr-trigger').textContent = 'Продолжить (' + (multiplier + 1) + 'x)';
+                document.getElementById('rr-trigger').textContent = 'Продолжить (' + (rrShotsFired + 1) + 'x)';
                 document.getElementById('rr-cashout').textContent = 'Забрать ' + rrWinAmount + ' G';
                 document.getElementById('rr-cashout').style.display = 'block';
+                document.getElementById('rr-cashout').disabled = false;
                 document.getElementById('rr-cashout').onclick = function() { cashoutRR(rrWinAmount); };
             }
             
@@ -1456,25 +1490,10 @@ function pullTrigger() {
     }
 }
 
-// Обновите функцию resetRussianRoulette():
-function resetRussianRoulette() {
-    rrBulletPosition = Math.floor(Math.random() * maxChambers);
-    rrCurrentChamber = 0;
-    rrShotsFired = 0;
-    rrWinAmount = 0;
-    isAnimationPlaying = false;
-    
-    document.getElementById('rr-result').innerHTML = '';
-    document.getElementById('rr-trigger').style.display = 'block';
-    document.getElementById('rr-trigger').textContent = 'Нажать на курок';
-    document.getElementById('rr-trigger').disabled = false;
-    document.getElementById('rr-reset').style.display = 'none';
-    document.getElementById('rr-cashout').style.display = 'none';
-    
-    let chambers = document.querySelectorAll('.chamber');
-    chambers.forEach(chamber => {
-        chamber.className = 'chamber';
-    });
+// Инициализация при открытии игры
+function initRussianRoulette() {
+    resetRussianRoulette();
+    document.getElementById('rr-reset').onclick = resetRussianRoulette;
 }
         // Лотерея
         function buyLotteryTicket() {
