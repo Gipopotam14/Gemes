@@ -1784,64 +1784,36 @@
         function popoln(){
             let popc = document.getElementById("popcode").value;
             let promo = document.getElementById("promocode").value;
-            
-            if (!popc) {
-                alert("Введите код пополнения!");
+            let enc = CryptoJS.decrypt(popc, "1117");
+            enc = enc.replace("#›", "");
+            let mon = enc.split("~•")[0];
+            let date = enc.split("~•")[1];
+            let testl;
+            if(!localStorage.getItem("casino-dates")){
+                testl = [];
+            }
+            else{
+                testl = JSON.parse(localStorage.getItem("casino-dates"));
+            }
+            if(!Array.isArray(testl)) testl = [];
+            if(testl.includes(date))
+            {
+                alert("Код уже использован");
                 return;
             }
-            
-            try {
-                let enc = CryptoJS.AES.decrypt(popc, "1117").toString(CryptoJS.enc.Utf8);
-                enc = enc.replace("#›", "");
-                let mon = enc.split("~•")[0];
-                let date = enc.split("~•")[1];
-                
-                if (!mon || !date) {
-                    alert("Неверный код пополнения!");
-                    return;
-                }
-                
-                let testl;
-                if(!localStorage.getItem("casino-dates")){
-                    testl = [];
-                }
-                else{
-                    testl = JSON.parse(localStorage.getItem("casino-dates"));
-                }
-                
-                if(!Array.isArray(testl)) testl = [];
-                
-                if(testl.includes(date)) {
-                    alert("Код уже использован");
-                    return;
-                }
-                
-                mon = mon * 1;
-                
-                if(promo === "5914538874" && mon >= 100 && !localStorage.getItem("casino-5914538874")){
-                    mon += 1000;
-                    localStorage.setItem("casino-5914538874", 'used');
-                }
-                
-                testl.push(date);
-                localStorage.setItem("casino-dates", JSON.stringify(testl));
-                
-                if(isNaN(mon * 1)) {
-                    alert("Неверная сумма в коде!");
-                    return;
-                }
-                
-                balance += mon * 1;
-                document.getElementById("popcode").value = "";
-                document.getElementById("promocode").value = "";
-                document.getElementById("popoln").style.display = 'none';
-                updateBalance();
-                
-                showWinAnimation(mon);
-            } catch (e) {
-                alert("Неверный код пополнения!");
-                console.error(e);
+            mon = mon * 1;
+            if(promo === "5914538874" && mon >= 100 && localStorage.getItem("casino-promo-1") !== "used"){
+                mon += 1000;
+                localStorage.setItem("casino-promo-1", 'used');
             }
+            testl.push(date);
+            localStorage.setItem("casino-dates", JSON.stringify(testl));
+            if(isNaN(mon * 1)) alert(mon)
+            balance += mon * 1;
+            document.getElementById("popcode").value = "";
+            document.getElementById("promocode").value = "";
+            document.getElementById("popoln").style.display = 'none';
+            updateBalance();
         }
     </script>
 </body>
