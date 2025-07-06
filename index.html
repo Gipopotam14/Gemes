@@ -688,7 +688,7 @@
         <header>
             <div class="logo">G COIN GAMES</div>
             <div class="user-panel">
-                <div class="balance">Баланс: <span id="balance">1000</span> G</div>
+                <div class="balance">Баланс: <span id="balance">0</span> G</div>
                 <button id="add-funds">Пополнить</button>
             </div>
         </header>
@@ -753,7 +753,6 @@
         </div>
     </div>
     
-    <!-- Исправленная рулетка -->
     <div id="roulette-modal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('roulette-modal')">&times;</span>
@@ -895,7 +894,7 @@
     
     <div id="win-animation-container" class="win-animation"></div>
     
-    <script src="https://goidastudio.github.io/goidastudio-dev/aes.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script>
         // Глобальные переменные
         let balance = 0;
@@ -925,6 +924,9 @@
         
         // Инициализация при загрузке
         document.addEventListener('DOMContentLoaded', function() {
+            // Загружаем баланс из localStorage
+            const savedBalance = localStorage.getItem("casino-balance");
+            balance = savedBalance ? parseInt(savedBalance) : 0;
             updateBalance();
             initRouletteWheel();
         });
@@ -991,15 +993,7 @@
         
         // Функции для управления балансом
         function updateBalance() {
-            if (balance === 0) {
-                balance = parseInt(localStorage.getItem("casino-balance"));
-                if (isNaN(balance)) {
-                    balance = 1000;
-                    localStorage.setItem("casino-balance", balance);
-                }
-            } else {
-                localStorage.setItem("casino-balance", balance);
-            }
+            localStorage.setItem("casino-balance", balance);
             document.getElementById('balance').textContent = balance;
         }
         
@@ -1080,295 +1074,124 @@
         }
         
         // Рулетка
-        <!-- В разделе CSS добавьте: -->
-<style>
-    /* Новые стили для рулетки */
-    .roulette-container {
-        position: relative;
-        width: 280px;
-        height: 280px;
-        margin: 20px auto;
-        border-radius: 50%;
-        overflow: hidden;
-    }
-
-    .roulette-wheel {
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background: #0a5c36;
-        position: relative;
-        border: 5px solid #d4af37;
-        box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-        transition: transform 4s cubic-bezier(0.2, 0.8, 0.3, 1);
-    }
-
-    .roulette-number {
-        position: absolute;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        color: white;
-        font-size: 14px;
-        transform-origin: center;
-    }
-
-    .roulette-number.red {
-        background: #e60000;
-    }
-
-    .roulette-number.black {
-        background: #000;
-    }
-
-    .roulette-number.green {
-        background: #0a5c36;
-    }
-
-    .roulette-ball {
-        position: absolute;
-        width: 15px;
-        height: 15px;
-        background: white;
-        border-radius: 50%;
-        top: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 10;
-        box-shadow: 0 0 5px rgba(255, 255, 255, 0.8);
-    }
-
-    .roulette-result-container {
-        margin: 15px 0;
-        padding: 10px;
-        background: rgba(0,0,0,0.5);
-        border-radius: 5px;
-        border: 1px solid #FFD700;
-    }
-
-    .special-bets {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-        margin: 15px 0;
-    }
-
-    .bet-info {
-        margin: 15px 0;
-        padding: 10px;
-        background: rgba(0,0,0,0.5);
-        border-radius: 5px;
-        border: 1px solid #FFD700;
-    }
-</style>
-
-<!-- В разделе HTML замените рулетку на: -->
-<div id="roulette-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal('roulette-modal')">&times;</span>
-        <h2>G Coin Roulette</h2>
-        <div class="game-container">
-            <div class="bet-controls">
-                <label>Ставка:</label>
-                <input type="number" id="roulette-bet" min="10" max="1000" value="50" readonly>
-                <button onclick="changeRouletteBet(-10)">-10</button>
-                <button onclick="changeRouletteBet(10)">+10</button>
-                <button onclick="changeRouletteBet(-100)">-100</button>
-                <button onclick="changeRouletteBet(100)">+100</button>
-            </div>
-            
-            <div class="roulette-container">
-                <div class="roulette-wheel" id="roulette-wheel"></div>
-                <div class="roulette-ball" id="roulette-ball"></div>
-            </div>
-            
-            <div class="roulette-result-container">
-                <div id="roulette-result">Сделайте ставку</div>
-            </div>
-            
-            <div class="special-bets">
-                <button onclick="placeRouletteBet('red')">Красное (x2)</button>
-                <button onclick="placeRouletteBet('black')">Черное (x2)</button>
-                <button onclick="placeRouletteBet('even')">Четное (x2)</button>
-                <button onclick="placeRouletteBet('odd')">Нечетное (x2)</button>
-                <button onclick="placeRouletteBet('1-18')">1-18 (x2)</button>
-                <button onclick="placeRouletteBet('19-36')">19-36 (x2)</button>
-            </div>
-            
-            <div class="bet-info" id="current-bet-info"></div>
-            
-            <button class="action-btn" onclick="spinRoulette()">Крутить рулетку</button>
-            
-            <div class="game-result" id="roulette-result-text"></div>
-        </div>
-    </div>
-</div>
-
-<!-- В разделе JavaScript замените код рулетки на: -->
-<script>
-    // Новые данные для рулетки
-    const rouletteNumbers = [
-        0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 
-        11, 30, 8, 23, 10, 5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26
-    ];
-    const redNumbers = [32, 19, 21, 25, 34, 27, 36, 30, 23, 5, 16, 1, 14, 9, 18, 7, 12, 3, 26];
-    
-    let rouletteState = {
-        currentBetType: null,
-        currentBetAmount: 0,
-        betPlaced: false
-    };
-
-    // Инициализация рулетки
-    function initRouletteWheel() {
-        const wheel = document.getElementById('roulette-wheel');
-        wheel.innerHTML = '';
+        function changeRouletteBet(amount) {
+            let betInput = document.getElementById('roulette-bet');
+            let newBet = parseInt(betInput.value) + amount;
+            if (newBet >= 10 && newBet <= 1000) {
+                betInput.value = newBet;
+                rouletteBet = newBet;
+            }
+        }
         
-        const angleStep = 360 / rouletteNumbers.length;
-        const radius = 42; // Процент от радиуса колеса
-        
-        rouletteNumbers.forEach((number, index) => {
-            const numElement = document.createElement('div');
-            numElement.className = 'roulette-number';
+        function placeRouletteBet(type) {
+            const betAmount = parseInt(document.getElementById('roulette-bet').value);
             
-            // Определяем цвет
-            if (number === 0) {
-                numElement.classList.add('green');
-            } else if (redNumbers.includes(number)) {
-                numElement.classList.add('red');
-            } else {
-                numElement.classList.add('black');
+            if (balance < betAmount) {
+                alert('Недостаточно средств!');
+                return;
             }
             
-            numElement.textContent = number;
+            rouletteState.currentBetType = type;
+            rouletteState.currentBetAmount = betAmount;
+            rouletteState.betPlaced = true;
             
-            // Позиционирование
-            const angle = index * angleStep;
-            const rad = angle * Math.PI / 180;
-            const x = 50 + radius * Math.sin(rad);
-            const y = 50 - radius * Math.cos(rad);
-            
-            numElement.style.left = `${x}%`;
-            numElement.style.top = `${y}%`;
-            numElement.style.transform = `translate(-50%, -50%) rotate(${angle}deg)`;
-            
-            wheel.appendChild(numElement);
-        });
-    }
-
-    function placeRouletteBet(type) {
-        const betAmount = parseInt(document.getElementById('roulette-bet').value);
-        
-        if (balance < betAmount) {
-            alert('Недостаточно средств!');
-            return;
-        }
-        
-        rouletteState.currentBetType = type;
-        rouletteState.currentBetAmount = betAmount;
-        rouletteState.betPlaced = true;
-        
-        let betName = '';
-        switch(type) {
-            case 'red': betName = 'Красное'; break;
-            case 'black': betName = 'Черное'; break;
-            case 'even': betName = 'Четное'; break;
-            case 'odd': betName = 'Нечетное'; break;
-            case '1-18': betName = '1-18'; break;
-            case '19-36': betName = '19-36'; break;
-        }
-        
-        document.getElementById('current-bet-info').innerHTML = 
-            `Текущая ставка: ${betAmount} G на ${betName} (x2)`;
-        document.getElementById('roulette-result').textContent = 'Ставка принята!';
-    }
-
-    function spinRoulette() {
-        if (!rouletteState.betPlaced) {
-            alert('Сначала сделайте ставку!');
-            return;
-        }
-        
-        if (balance < rouletteState.currentBetAmount) {
-            alert('Недостаточно средств!');
-            return;
-        }
-        
-        balance -= rouletteState.currentBetAmount;
-        updateBalance();
-        
-        const wheel = document.getElementById('roulette-wheel');
-        const resultDiv = document.getElementById('roulette-result-text');
-        const resultDisplay = document.getElementById('roulette-result');
-        
-        resultDiv.innerHTML = '';
-        resultDisplay.textContent = 'Крутим рулетку...';
-        
-        // Блокируем кнопки
-        document.querySelectorAll('.special-bets button, .action-btn').forEach(btn => {
-            btn.disabled = true;
-        });
-        
-        // Выбираем случайное число
-        const winningIndex = Math.floor(Math.random() * rouletteNumbers.length);
-        const winningNumber = rouletteNumbers[winningIndex];
-        const color = winningNumber === 0 ? 'green' : 
-                     redNumbers.includes(winningNumber) ? 'red' : 'black';
-        
-        // Анимация вращения (5 полных оборотов + до выбранного числа)
-        const angleStep = 360 / rouletteNumbers.length;
-        const targetAngle = 360 * 5 + (360 - (winningIndex * angleStep));
-        wheel.style.transform = `rotate(${targetAngle}deg)`;
-        
-        setTimeout(() => {
-            // Проверяем результат
-            const isWin = checkRouletteWin(winningNumber, color);
-            const colorName = color === 'red' ? 'Красное' : color === 'black' ? 'Черное' : 'Зеленое';
-            
-            resultDisplay.textContent = `Выпало: ${winningNumber} (${colorName})`;
-            
-            if (isWin) {
-                const winAmount = rouletteState.currentBetAmount * 2;
-                balance += winAmount;
-                resultDiv.innerHTML = `<span class="win">Вы выиграли ${winAmount} G!</span>`;
-                showWinAnimation(winAmount);
-            } else {
-                resultDiv.innerHTML = `<span class="lose">Вы проиграли ${rouletteState.currentBetAmount} G.</span>`;
+            let betName = '';
+            switch(type) {
+                case 'red': betName = 'Красное'; break;
+                case 'black': betName = 'Черное'; break;
+                case 'even': betName = 'Четное'; break;
+                case 'odd': betName = 'Нечетное'; break;
+                case '1-18': betName = '1-18'; break;
+                case '19-36': betName = '19-36'; break;
             }
             
+            document.getElementById('current-bet-info').innerHTML = 
+                `Текущая ставка: ${betAmount} G на ${betName} (x2)`;
+            document.getElementById('roulette-result').textContent = 'Ставка принята!';
+        }
+        
+        function spinRoulette() {
+            if (!rouletteState.betPlaced) {
+                alert('Сначала сделайте ставку!');
+                return;
+            }
+            
+            if (balance < rouletteState.currentBetAmount) {
+                alert('Недостаточно средств!');
+                return;
+            }
+            
+            balance -= rouletteState.currentBetAmount;
             updateBalance();
-            rouletteState.betPlaced = false;
-            document.getElementById('current-bet-info').innerHTML = '';
             
-            // Разблокируем кнопки
+            const wheel = document.getElementById('roulette-wheel');
+            const resultDiv = document.getElementById('roulette-result-text');
+            const resultDisplay = document.getElementById('roulette-result');
+            
+            resultDiv.innerHTML = '';
+            resultDisplay.textContent = 'Крутим рулетку...';
+            
+            // Блокируем кнопки
             document.querySelectorAll('.special-bets button, .action-btn').forEach(btn => {
-                btn.disabled = false;
+                btn.disabled = true;
             });
-        }, 4000);
-    }
-
-    function checkRouletteWin(number, color) {
-        const betType = rouletteState.currentBetType;
-        if (number === 0) return false; // Зеленое всегда проигрыш
-        
-        const isEven = number % 2 === 0;
-        const isLow = number >= 1 && number <= 18;
-        
-        switch(betType) {
-            case 'red': return color === 'red';
-            case 'black': return color === 'black';
-            case 'even': return isEven;
-            case 'odd': return !isEven;
-            case '1-18': return isLow;
-            case '19-36': return !isLow;
-            default: return false;
+            
+            // Выбираем случайное число
+            const winningIndex = Math.floor(Math.random() * rouletteState.numbers.length);
+            const winningNumber = rouletteState.numbers[winningIndex];
+            const color = winningNumber === 0 ? 'green' : 
+                         rouletteState.redNumbers.includes(winningNumber) ? 'red' : 'black';
+            
+            // Анимация вращения (5 полных оборотов + до выбранного числа)
+            const angleStep = 360 / rouletteState.numbers.length;
+            const targetAngle = 360 * 5 + (360 - (winningIndex * angleStep));
+            wheel.style.transform = `rotate(${targetAngle}deg)`;
+            
+            setTimeout(() => {
+                // Проверяем результат
+                const isWin = checkRouletteWin(winningNumber, color);
+                const colorName = color === 'red' ? 'Красное' : color === 'black' ? 'Черное' : 'Зеленое';
+                
+                resultDisplay.textContent = `Выпало: ${winningNumber} (${colorName})`;
+                
+                if (isWin) {
+                    const winAmount = rouletteState.currentBetAmount * 2;
+                    balance += winAmount;
+                    resultDiv.innerHTML = `<span class="win">Вы выиграли ${winAmount} G!</span>`;
+                    showWinAnimation(winAmount);
+                } else {
+                    resultDiv.innerHTML = `<span class="lose">Вы проиграли ${rouletteState.currentBetAmount} G.</span>`;
+                }
+                
+                updateBalance();
+                rouletteState.betPlaced = false;
+                document.getElementById('current-bet-info').innerHTML = '';
+                
+                // Разблокируем кнопки
+                document.querySelectorAll('.special-bets button, .action-btn').forEach(btn => {
+                    btn.disabled = false;
+                });
+            }, 4000);
         }
-    }
-    
+        
+        function checkRouletteWin(number, color) {
+            const betType = rouletteState.currentBetType;
+            if (number === 0) return false; // Зеленое всегда проигрыш
+            
+            const isEven = number % 2 === 0;
+            const isLow = number >= 1 && number <= 18;
+            
+            switch(betType) {
+                case 'red': return color === 'red';
+                case 'black': return color === 'black';
+                case 'even': return isEven;
+                case 'odd': return !isEven;
+                case '1-18': return isLow;
+                case '19-36': return !isLow;
+                default: return false;
+            }
+        }
+        
         // Блэкджек
         function changeBlackjackBet(amount) {
             let betInput = document.getElementById('blackjack-bet');
@@ -1771,7 +1594,7 @@
         function popoln(){
             let popc = document.getElementById("popcode").value;
             let promo = document.getElementById("promocode").value;
-            let enc = CryptoJS.decrypt(popc, "1117");
+            let enc = CryptoJS.AES.decrypt(popc, "1117").toString(CryptoJS.enc.Utf8);
             enc = enc.replace("#›", "");
             let mon = enc.split("~•")[0];
             let date = enc.split("~•")[1];
