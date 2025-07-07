@@ -18,7 +18,6 @@
             width: 100%;
             height: 100%;
             overflow-x: hidden;
-            touch-action: pan-y; /* Разрешаем только вертикальный скролл */
             font-family: 'Arial', sans-serif;
             background-color: #121212;
             color: #FFD700;
@@ -29,7 +28,7 @@
         /* Основной контейнер */
         .container {
             width: 100%;
-            min-height: 100vh; /* Используем viewport height */
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
@@ -83,7 +82,7 @@
         /* Основная область с играми */
         .main-content {
             flex: 1;
-            overflow-y: auto; /* Разрешаем скроллинг */
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
         }
@@ -182,6 +181,7 @@
             background: rgba(0, 0, 0, 0.9);
             z-index: 100;
             animation: fadeIn 0.3s;
+            overflow-y: auto;
         }
         
         @keyframes fadeIn {
@@ -1059,13 +1059,6 @@
             initRouletteWheel();
             initSlots();
             
-            // Запрет скроллинга на мобильных устройствах
-            document.addEventListener('touchmove', function(e) {
-                if (e.target.className.indexOf('modal') === -1) {
-                    e.preventDefault();
-                }
-            }, { passive: false });
-            
             // Инициализация русской рулетки
             initRussianRoulette();
             
@@ -1118,8 +1111,13 @@
             const reel2 = document.getElementById('reel-inner2');
             const reel3 = document.getElementById('reel-inner3');
             
-            // Создаем по 20 символов для каждого барабана (для плавного скроллинга)
-            for (let i = 0; i < 20; i++) {
+            // Очищаем барабаны
+            reel1.innerHTML = '';
+            reel2.innerHTML = '';
+            reel3.innerHTML = '';
+            
+            // Создаем по 3 символа для каждого барабана (для отображения)
+            for (let i = 0; i < 3; i++) {
                 const symbol1 = document.createElement('div');
                 symbol1.className = 'reel-item';
                 symbol1.textContent = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
@@ -1226,30 +1224,40 @@
         
         function spinReel(reelId, targetSymbol, delay, callback) {
             const reel = document.getElementById(reelId);
-            const items = reel.querySelectorAll('.reel-item');
             
-            // Находим позицию целевого символа (первое вхождение)
-            let targetIndex = 0;
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].textContent === targetSymbol) {
-                    targetIndex = i;
-                    break;
-                }
+            // Очищаем барабан и добавляем 3 символа (1 видимый, 2 сверху)
+            reel.innerHTML = '';
+            
+            // Добавляем символы сверху (чтобы анимация выглядела естественно)
+            for (let i = 0; i < 2; i++) {
+                const symbol = document.createElement('div');
+                symbol.className = 'reel-item';
+                symbol.textContent = slotSymbols[Math.floor(Math.random() * slotSymbols.length)];
+                reel.appendChild(symbol);
             }
             
-            // Вычисляем конечную позицию (чтобы символ был в середине)
-            const itemHeight = 70;
-            const targetPosition = -(targetIndex * itemHeight) - (itemHeight * 10); // 10 дополнительных оборотов
+            // Добавляем целевой символ (он будет в середине после анимации)
+            const targetItem = document.createElement('div');
+            targetItem.className = 'reel-item';
+            targetItem.textContent = targetSymbol;
+            reel.appendChild(targetItem);
+            
+            // Начальная позиция (чтобы целевой символ был внизу после анимации)
+            reel.style.transform = 'translateY(-140px)';
             
             setTimeout(() => {
                 reel.style.transition = 'transform 3s cubic-bezier(0.2, 0.8, 0.3, 1)';
-                reel.style.transform = `translateY(${targetPosition}px)`;
+                reel.style.transform = 'translateY(0)';
                 
                 setTimeout(() => {
-                    // После завершения анимации сбрасываем позицию для бесконечного скроллинга
+                    // После завершения анимации оставляем только целевой символ
+                    reel.innerHTML = '';
                     reel.style.transition = 'none';
-                    const currentPosition = parseInt(reel.style.transform.replace('translateY(', '').replace('px)', ''));
-                    reel.style.transform = `translateY(${currentPosition % (itemHeight * slotSymbols.length)}px)`;
+                    
+                    const finalItem = document.createElement('div');
+                    finalItem.className = 'reel-item';
+                    finalItem.textContent = targetSymbol;
+                    reel.appendChild(finalItem);
                     
                     if (callback) callback();
                 }, 3000);
@@ -1665,8 +1673,6 @@
             rrShotsFired++;
             let currentChamber = document.querySelectorAll('.chamber')[rrCurrentChamber];
             currentChamber.classList.add('active');
-            
-            // Убрана анимация вращения барабана
             
             setTimeout(() => {
                 if (rrCurrentChamber === rrBulletPosition) {
